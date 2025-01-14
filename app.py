@@ -91,7 +91,7 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        if verify_user(username, password, "password123"):
+        if verify_user(username, password, "securePass"):
             return render_template("index.html", message="Login successful!")
         else:
             return render_template("index.html", message="Invalid username or password.")
