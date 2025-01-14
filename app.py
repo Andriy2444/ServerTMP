@@ -1,6 +1,7 @@
-from flask import Flask
+from flask import Flask, request, render_template
 import mysql.connector
 import os
+import bcrypt
 
 app = Flask(__name__)
 
@@ -23,20 +24,30 @@ def get_db_connection():
     )
     return connection
 
-@app.route("/")
-def home():
+def verify_user(username, password):
     try:
         with get_db_connection() as connection:
             with connection.cursor() as cursor:
-                cursor.execute("SELECT * FROM users;")
-                users = cursor.fetchall()
-
-                users_list = "\n".join([f"Name: {user[1]}, Password: {user[2]}" for user in users])
-
-        return f"Hello, Render!\nUsers in DB:\n{users_list}"
-
+                cursor.execute("SELECT password FROM users WHERE username = %s", (username,))
+                user = cursor.fetchone()
+                if user and bcrypt.checkpw(password.encode('utf-8'), user[0].encode('utf-8')):
+                    return True
     except mysql.connector.Error as err:
-        return f"Помилка підключення до бази даних: {err}"
+        print(f"Database error: {err}")
+    return False
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        if verify_user(username, password):
+            return "Login successful!"
+        else:
+            return "Invalid username or password.", 401
+
+    return render_template("index.html")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
