@@ -32,7 +32,6 @@ def get_db_connection():
         logging.error(f"Не вдалося підключитися до бази даних: {err}")
         return None
 
-
 def reset_user_password(username, new_password):
     # Генерація нового bcrypt хешу для пароля
     hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
@@ -56,7 +55,7 @@ def reset_user_password(username, new_password):
         if connection:
             connection.close()
 
-def verify_user(username, password):
+def verify_user(username, password, newpassword):
     try:
         connection = get_db_connection()
         if connection is None:
@@ -68,12 +67,14 @@ def verify_user(username, password):
 
             if user:
                 stored_password_hash = user[0]
-                # Перевірка, чи це bcrypt хеш
-                if stored_password_hash.startswith("$2b$"):
+                # Перевірка на кілька можливих префіксів bcrypt
+                if stored_password_hash.startswith(("$2b$", "$2a$")):
                     if bcrypt.checkpw(password.encode('utf-8'), stored_password_hash.encode('utf-8')):
                         return True
                 else:
-                    logging.warning(f"Пароль користувача {username} має некоректний формат хешу.")
+                    logging.warning(f"Пароль користувача {username} має некоректний формат хешу. Перезбереження пароля...")
+                    # Оновити пароль з новим хешем
+                    reset_user_password(username, newpassword)
             else:
                 logging.warning(f"Користувач {username} не знайдений.")
     except mysql.connector.Error as err:
@@ -83,20 +84,19 @@ def verify_user(username, password):
             connection.close()
 
     return False
+
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
 
-        if verify_user(username, password):
+        if verify_user(username, password, "password123"):
             return render_template("index.html", message="Login successful!")
         else:
             return render_template("index.html", message="Invalid username or password.")
 
     return render_template("index.html")
-    reset_user_password("Alice", "password123")
-    reset_user_password("Bob", "securePass")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
