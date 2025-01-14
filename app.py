@@ -32,6 +32,30 @@ def get_db_connection():
         logging.error(f"Не вдалося підключитися до бази даних: {err}")
         return None
 
+
+def reset_user_password(username, new_password):
+    # Генерація нового bcrypt хешу для пароля
+    hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+
+    connection = get_db_connection()
+    if connection is None:
+        return False
+
+    try:
+        with connection.cursor() as cursor:
+            # Оновлення пароля в базі даних
+            cursor.execute("UPDATE users SET password = %s WHERE name = %s",
+                           (hashed_password.decode('utf-8'), username))
+            connection.commit()
+            logging.info(f"Пароль для користувача {username} оновлено.")
+            return True
+    except mysql.connector.Error as err:
+        logging.error(f"Помилка при оновленні пароля: {err}")
+        return False
+    finally:
+        if connection:
+            connection.close()
+
 def verify_user(username, password):
     try:
         connection = get_db_connection()
@@ -71,6 +95,8 @@ def login():
             return render_template("index.html", message="Invalid username or password.")
 
     return render_template("index.html")
+    reset_user_password("Alice", "password123")
+    reset_user_password("Bob", "securePass")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
