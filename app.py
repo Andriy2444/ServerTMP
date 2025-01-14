@@ -2,8 +2,12 @@ from flask import Flask, request, render_template
 import mysql.connector
 import os
 import bcrypt
+import logging
 
 app = Flask(__name__)
+
+# Налаштування логування
+logging.basicConfig(level=logging.INFO)
 
 db_host = os.getenv('DB_HOST')
 db_port = os.getenv('DB_PORT')
@@ -15,27 +19,39 @@ if not all([db_host, db_port, db_name, db_user, db_password]):
     raise ValueError("Не всі змінні середовища для бази даних задані!")
 
 def get_db_connection():
-    connection = mysql.connector.connect(
-        host=db_host,
-        port=db_port,
-        database=db_name,
-        user=db_user,
-        password=db_password
-    )
-    return connection
+    try:
+        connection = mysql.connector.connect(
+            host=db_host,
+            port=db_port,
+            database=db_name,
+            user=db_user,
+            password=db_password
+        )
+        return connection
+    except mysql.connector.Error as err:
+        logging.error(f"Не вдалося підключитися до бази даних: {err}")
+        return None
 
 def verify_user(username, password):
     try:
-        with get_db_connection() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT password FROM users WHERE name = %s", (username,))
-                user = cursor.fetchone()
-                if user and bcrypt.checkpw(password.encode('utf-8'), user[0].encode('utf-8')):
-                    return True
-                else:
-                    print(f"Incorrect password or username: {username}")
+        connection = get_db_connection()
+        if connection is None:
+            return False
+
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT password FROM users WHERE name = %s", (username,))
+            user = cursor.fetchone()
+
+            if user and bcrypt.checkpw(password.encode('utf-8'), user[0].encode('utf-8')):
+                return True
+            else:
+                logging.warning(f"Невірне ім’я користувача або пароль для: {username}")
     except mysql.connector.Error as err:
-        print(f"Database error: {err}")
+        logging.error(f"Помилка бази даних: {err}")
+    finally:
+        if connection:
+            connection.close()
+
     return False
 
 @app.route("/", methods=["GET", "POST"])
