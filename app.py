@@ -6,7 +6,6 @@ import logging
 
 app = Flask(__name__)
 
-# Налаштування логування
 logging.basicConfig(level=logging.INFO)
 
 db_host = os.getenv('DB_HOST')
@@ -16,7 +15,7 @@ db_user = os.getenv('DB_USER')
 db_password = os.getenv('DB_PASSWORD')
 
 if not all([db_host, db_port, db_name, db_user, db_password]):
-    raise ValueError("Не всі змінні середовища для бази даних задані!")
+    raise ValueError("Not all database environment variables are set!")
 
 def get_db_connection():
     try:
@@ -29,33 +28,33 @@ def get_db_connection():
         )
         return connection
     except mysql.connector.Error as err:
-        logging.error(f"Не вдалося підключитися до бази даних: {err}")
+        logging.error(f"Failed to connect to database: {err}")
         return None
 
-def reset_user_password(username, new_password):
-    # Генерація нового bcrypt хешу для пароля
-    hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+# def reset_user_password(username, new_password):
+#     # Генерація нового bcrypt хешу для пароля
+#     hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+#
+#     connection = get_db_connection()
+#     if connection is None:
+#         return False
+#
+#     try:
+#         with connection.cursor() as cursor:
+#             # Оновлення пароля в базі даних
+#             cursor.execute("UPDATE users SET password = %s WHERE name = %s",
+#                            (hashed_password.decode('utf-8'), username))
+#             connection.commit()
+#             logging.info(f"Пароль для користувача {username} оновлено.")
+#             return True
+#     except mysql.connector.Error as err:
+#         logging.error(f"Помилка при оновленні пароля: {err}")
+#         return False
+#     finally:
+#         if connection:
+#             connection.close()
 
-    connection = get_db_connection()
-    if connection is None:
-        return False
-
-    try:
-        with connection.cursor() as cursor:
-            # Оновлення пароля в базі даних
-            cursor.execute("UPDATE users SET password = %s WHERE name = %s",
-                           (hashed_password.decode('utf-8'), username))
-            connection.commit()
-            logging.info(f"Пароль для користувача {username} оновлено.")
-            return True
-    except mysql.connector.Error as err:
-        logging.error(f"Помилка при оновленні пароля: {err}")
-        return False
-    finally:
-        if connection:
-            connection.close()
-
-def verify_user(username, password, newpassword):
+def verify_user(username, password):
     try:
         connection = get_db_connection()
         if connection is None:
@@ -67,18 +66,15 @@ def verify_user(username, password, newpassword):
 
             if user:
                 stored_password_hash = user[0]
-                # Перевірка на кілька можливих префіксів bcrypt
                 if stored_password_hash.startswith(("$2b$", "$2a$")):
                     if bcrypt.checkpw(password.encode('utf-8'), stored_password_hash.encode('utf-8')):
                         return True
                 else:
-                    logging.warning(f"Пароль користувача {username} має некоректний формат хешу. Перезбереження пароля...")
-                    # Оновити пароль з новим хешем
-                    reset_user_password(username, newpassword)
+                    logging.warning(f"Username: {username} has an incorrect hash format.")
             else:
-                logging.warning(f"Користувач {username} не знайдений.")
+                logging.warning(f"Username: {username} not found!.")
     except mysql.connector.Error as err:
-        logging.error(f"Помилка бази даних: {err}")
+        logging.error(f"Error bdo: {err}")
     finally:
         if connection:
             connection.close()
@@ -91,7 +87,7 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        if verify_user(username, password, "securePass"):
+        if verify_user(username, password):
             return render_template("index.html", message="Login successful!")
         else:
             return render_template("index.html", message="Invalid username or password.")
