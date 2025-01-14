@@ -28,7 +28,7 @@ def verify_user(username, password):
     try:
         with get_db_connection() as connection:
             with connection.cursor() as cursor:
-                cursor.execute("SELECT password FROM users WHERE username = %s", (username,))
+                cursor.execute("SELECT password FROM users WHERE name = %s", (username,))
                 user = cursor.fetchone()
                 if user and bcrypt.checkpw(password.encode('utf-8'), user[0].encode('utf-8')):
                     return True
@@ -36,7 +36,7 @@ def verify_user(username, password):
         print(f"Database error: {err}")
     return False
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form["username"]
