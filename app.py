@@ -32,6 +32,8 @@ def verify_user(username, password):
                 user = cursor.fetchone()
                 if user and bcrypt.checkpw(password.encode('utf-8'), user[0].encode('utf-8')):
                     return True
+                else:
+                    print(f"Incorrect password or username: {username}")
     except mysql.connector.Error as err:
         print(f"Database error: {err}")
     return False
