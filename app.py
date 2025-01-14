@@ -43,9 +43,9 @@ def login():
         password = request.form["password"]
 
         if verify_user(username, password):
-            return "Login successful!"
+            return render_template("index.html", message="Login successful!")
         else:
-            return "Invalid username or password.", 401
+            return render_template("index.html", message="Invalid username or password.")
 
     return render_template("index.html")
 
