@@ -42,10 +42,16 @@ def verify_user(username, password):
             cursor.execute("SELECT password FROM users WHERE name = %s", (username,))
             user = cursor.fetchone()
 
-            if user and bcrypt.checkpw(password.encode('utf-8'), user[0].encode('utf-8')):
-                return True
+            if user:
+                stored_password_hash = user[0]
+                # Перевірка, чи це bcrypt хеш
+                if stored_password_hash.startswith("$2b$"):
+                    if bcrypt.checkpw(password.encode('utf-8'), stored_password_hash.encode('utf-8')):
+                        return True
+                else:
+                    logging.warning(f"Пароль користувача {username} має некоректний формат хешу.")
             else:
-                logging.warning(f"Невірне ім’я користувача або пароль для: {username}")
+                logging.warning(f"Користувач {username} не знайдений.")
     except mysql.connector.Error as err:
         logging.error(f"Помилка бази даних: {err}")
     finally:
@@ -53,7 +59,6 @@ def verify_user(username, password):
             connection.close()
 
     return False
-
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
