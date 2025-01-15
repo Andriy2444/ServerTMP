@@ -128,6 +128,11 @@ def register():
 
     return render_template("register.html")
 
+@app.route("/menu")
+def menu():
+    return render_template("menu.html")
+
+
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -135,7 +140,7 @@ def login():
         password = request.form["password"]
 
         if verify_user(username, password):
-            return render_template("index.html", message="Login successful!")
+            return redirect(url_for("menu"))
         else:
             return render_template("index.html", message="Invalid username or password.")
 
