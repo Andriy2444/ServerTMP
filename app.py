@@ -81,6 +81,53 @@ def verify_user(username, password):
 
     return False
 
+def register_user(username, password):
+    connection = get_db_connection()
+    if connection is None:
+        return False, "Database connection failed."
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT id FROM users WHERE name = %s", (username,))
+            user = cursor.fetchone()
+
+            if user:
+                return False, "Username already exists."
+
+
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+            cursor.execute(
+                "INSERT INTO users (name, password) VALUES (%s, %s)",
+                (username, hashed_password.decode('utf-8'))
+            )
+            connection.commit()
+            logging.info(f"User {username} successfully registered.")
+            return True, "User registered successfully."
+
+    except mysql.connector.Error as err:
+        logging.error(f"Error during user registration: {err}")
+        return False, "Database error occurred."
+
+    finally:
+        if connection:
+            connection.close()
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        confirm_password = request.form["confirm_password"]
+
+        if password != confirm_password:
+            return render_template("register.html", message="Passwords do not match.")
+
+        success, message = register_user(username, password)
+        return render_template("register.html", message=message)
+
+    return render_template("register.html")
+
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
