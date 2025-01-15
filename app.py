@@ -74,7 +74,7 @@ def verify_user(username, password):
             else:
                 logging.warning(f"Username: {username} not found!.")
     except mysql.connector.Error as err:
-        logging.error(f"Error bdo: {err}")
+        logging.error(f"Error dbo: {err}")
     finally:
         if connection:
             connection.close()
