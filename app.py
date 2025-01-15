@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect, url_for
 import mysql.connector
 import os
 import bcrypt
@@ -113,6 +113,19 @@ def register_user(username, password):
         if connection:
             connection.close()
 
+@app.route("/", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        if verify_user(username, password):
+            return redirect(url_for("menu"))
+        else:
+            return render_template("index.html", message="Invalid username or password.")
+
+    return render_template("index.html")
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -131,20 +144,6 @@ def register():
 @app.route("/menu")
 def menu():
     return render_template("menu.html")
-
-
-@app.route("/", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-
-        if verify_user(username, password):
-            return redirect(url_for("menu"))
-        else:
-            return render_template("index.html", message="Invalid username or password.")
-
-    return render_template("index.html")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
