@@ -16,12 +16,19 @@
                 <input type="password" id="password" name="password" placeholder="password" required><br><br>
 
                 <button type="submit">Login</button>
-                <button onclick="window.location.href='/register';">Register</button>
+                <button onclick="goToRegister(event)">Register</button>
             </form>
         </div>
 
         {% if message %}
             <p>{{ message }}</p>
         {% endif %}
+
+        <script>
+            function goToRegister(event) {
+                event.preventDefault();
+                window.location.href = "/register";
+            }
+        </script>
     </body>
 </html>
