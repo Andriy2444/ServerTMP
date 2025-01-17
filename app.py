@@ -1,10 +1,12 @@
 from flask import Flask, request, render_template, redirect, url_for
+from werkzeug.utils import secure_filename
 import mysql.connector
 import os
 import bcrypt
 import logging
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 logging.basicConfig(level=logging.INFO)
 
@@ -141,9 +143,42 @@ def register():
 
     return render_template("register.html")
 
-@app.route("/menu")
-def menu():
-    return render_template("menu.html")
+@app.route("/menu", methods=['GET'])
+def view_menu():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM products ORDER BY created_at DESC")
+    menu = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    return render_template('menu.html', products=menus)
+
+@app.route('/add-product', methods=['GET', 'POST'])
+def add_product():
+    if request.method == 'POST':
+        name = request.form['name']
+        description = request.form['description']
+        price = request.form['price']
+        image = request.files['image']
+
+        if image:
+            filename = secure_filename(image.filename)
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image.save(image_path)
+
+            connection = get_db_connection()
+            cursor = connection.cursor()
+            cursor.execute(
+                "INSERT INTO products (name, description, image_url, price) VALUES (%s, %s, %s, %s)",
+                (name, description, f"/{image_path}", price),
+            )
+            connection.commit()
+            cursor.close()
+            connection.close()
+
+        return redirect(url_for('view_products'))
+    return render_template('add_product.html')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

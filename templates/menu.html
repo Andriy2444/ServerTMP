@@ -2,31 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        #background-video {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: -1;
-        }
-    </style>
+    <title>Menu</title>
 </head>
 <body>
-    <video autoplay loop muted playsinline id="background-video">
-        <source src="{{ url_for('static', filename='video/rofl.mp4') }}" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
+    <button onclick="window.location.href = '/add-product';">Register</button>
+    <h1>Menu</h1>
+    {% for menu in menus %}
+        <div>
+            <h2>{{ menu.name }}</h2>
+            <p>{{ menu.description }}</p>
+            <img src="{{ menu.image_url }}" alt="{{ menu.name }}" style="width:200px;height:auto;">
+            <p>Price: ${{ menu.price }}</p>
+        </div>
+        <hr>
+    {% endfor %}
 </body>
 </html>
