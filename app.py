@@ -178,7 +178,7 @@ def add_product():
             connection.close()
 
         return redirect(url_for('view_products'))
-    return render_template('add_product.html')
+    return render_template('add-product.html')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
