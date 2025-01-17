@@ -7,12 +7,12 @@
 <body>
     <button onclick="window.location.href = '/add-product';">Add product</button>
     <h1>Menu</h1>
-    {% for menu in menus %}
+    {% for product in products %}
         <div>
-            <h2>{{ menu.name }}</h2>
-            <p>{{ menu.description }}</p>
-            <img src="{{ menu.image_url }}" alt="{{ menu.name }}" style="width:200px;height:auto;">
-            <p>Price: ${{ menu.price }}</p>
+            <h2>{{ product.name }}</h2>
+            <p>{{ product.description }}</p>
+            <img src="{{ product.image_url }}" alt="{{ product.name }}" style="width:200px;height:auto;">
+            <p>Price: ${{ product.price }}</p>
         </div>
         <hr>
     {% endfor %}
