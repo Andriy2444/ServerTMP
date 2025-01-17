@@ -148,7 +148,7 @@ def view_menu():
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     cursor.execute("SELECT * FROM products ORDER BY created_at DESC")
-    menu = cursor.fetchall()
+    menus = cursor.fetchall()
     cursor.close()
     connection.close()
 
