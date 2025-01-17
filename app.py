@@ -177,7 +177,7 @@ def add_product():
             cursor.close()
             connection.close()
 
-        return redirect(url_for('view_products'))
+        return redirect(url_for('menu.html'))
     return render_template('add-product.html')
 
 if __name__ == "__main__":
