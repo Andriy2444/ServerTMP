@@ -6,7 +6,7 @@ import bcrypt
 import logging
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
 
 logging.basicConfig(level=logging.INFO)
 
@@ -148,11 +148,11 @@ def menu():
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     cursor.execute("SELECT * FROM products")
-    menus = cursor.fetchall()
+    products = cursor.fetchall()
     cursor.close()
     connection.close()
 
-    return render_template('menu.html', products=menus)
+    return render_template('menu.html', products=products)
 
 @app.route('/add-product', methods=['GET', 'POST'])
 def add_product():
@@ -171,7 +171,7 @@ def add_product():
             cursor = connection.cursor()
             cursor.execute(
                 "INSERT INTO products (name, description, image_url, price) VALUES (%s, %s, %s, %s)",
-                (name, description, f"/{image_path}", price),
+                (name, description, f"/static/uploads/{filename}", price),
             )
             connection.commit()
             cursor.close()
