@@ -8,6 +8,7 @@ import logging
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
 logging.basicConfig(level=logging.INFO)
 
