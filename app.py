@@ -20,14 +20,10 @@ db_name = os.getenv('DB_NAME')
 db_user = os.getenv('DB_USER')
 db_password = os.getenv('DB_PASSWORD')
 
-cloud_name = os.getenv('CLOUD_NAME')
-API_key = os.getenv('API_KEY')
-API_secret = os.getenv('API_SECRET')
-
 cloudinary.config(
-    cloud_name=cloud_name,
-    api_key=API_key,
-    api_secret=API_secret
+    cloud_name = os.getenv('CLOUD_NAME'),
+    api_key = os.getenv('API_KEY'),
+    api_secret = os.getenv('API_SECRET')
 )
 
 if not all([db_host, db_port, db_name, db_user, db_password]):
