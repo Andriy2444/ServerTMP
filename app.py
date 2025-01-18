@@ -1,4 +1,5 @@
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for, jsonify
+import requests
 from werkzeug.utils import secure_filename
 import mysql.connector
 import os
@@ -9,6 +10,8 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
 
 logging.basicConfig(level=logging.INFO)
+
+CLIENT_ID = os.getenv('CLIENT_ID')
 
 db_host = os.getenv('DB_HOST')
 db_port = os.getenv('DB_PORT')
@@ -163,15 +166,21 @@ def add_product():
         image = request.files['image']
 
         if image:
-            filename = secure_filename(image.filename)
-            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            image.save(image_path)
+            headers = {"Authorization": f"Client-ID {CLIENT_ID}"}
+            url = "https://api.imgur.com/3/upload"
+            files = {'image': image.read()}
+
+            response = requests.post(url, headers=headers, files=files)
+            if response.status_code == 200:
+                imgur_link = response.json()['data']['link']
+            else:
+                return "Error uploading image to Imgur", 500
 
             connection = get_db_connection()
             cursor = connection.cursor()
             cursor.execute(
                 "INSERT INTO products (name, description, image_url, price) VALUES (%s, %s, %s, %s)",
-                (name, description, f"/static/uploads/{filename}", price),
+                (name, description, imgur_link, price),
             )
             connection.commit()
             cursor.close()
