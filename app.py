@@ -12,7 +12,7 @@ app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
 logging.basicConfig(level=logging.INFO)
 
-CLIENT_ID = os.getenv('CLIENT_ID')
+client_ID = os.getenv('CLIENT_ID')
 
 db_host = os.getenv('DB_HOST')
 db_port = os.getenv('DB_PORT')
@@ -167,7 +167,7 @@ def add_product():
         image = request.files['image']
 
         if image:
-            headers = {"Authorization": f"Client-ID {CLIENT_ID}"}
+            headers = {"Authorization": f"Client-ID {client_ID}"}
             url = "https://api.imgur.com/3/upload"
             files = {'image': image.read()}
 
@@ -175,7 +175,7 @@ def add_product():
             if response.status_code == 200:
                 imgur_link = response.json()['data']['link']
             else:
-                return "Error uploading image to Imgur", 500
+                return f"Error uploading image to Imgur. Status Code: {response.status_code}. Response: {response.text}", 500
 
             connection = get_db_connection()
             cursor = connection.cursor()
