@@ -5,6 +5,8 @@ import mysql.connector
 import os
 import bcrypt
 import logging
+import cloudinary.uploader
+import cloudinary
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
@@ -12,13 +14,21 @@ app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
 logging.basicConfig(level=logging.INFO)
 
-client_ID = os.getenv('CLIENT_ID')
-
 db_host = os.getenv('DB_HOST')
 db_port = os.getenv('DB_PORT')
 db_name = os.getenv('DB_NAME')
 db_user = os.getenv('DB_USER')
 db_password = os.getenv('DB_PASSWORD')
+
+cloud_name = os.getenv('CLOUD_NAME')
+API_key = os.getenv('API_KEY')
+API_secret = os.getenv('API_SECRET')
+
+cloudinary.config(
+    cloud_name=cloud_name,
+    api_key=API_key,
+    api_secret=API_secret
+)
 
 if not all([db_host, db_port, db_name, db_user, db_password]):
     raise ValueError("Not all database environment variables are set!")
@@ -167,15 +177,8 @@ def add_product():
         image = request.files['image']
 
         if image:
-            headers = {"Authorization": f"Client-ID {client_ID}"}
-            url = "https://api.imgur.com/3/upload"
-            files = {'image': image.read()}
-
-            response = requests.post(url, headers=headers, files=files)
-            if response.status_code == 200:
-                imgur_link = response.json()['data']['link']
-            else:
-                return f"Error uploading image to Imgur. Status Code: {response.status_code}. Response: {response.text}", 500
+            response = cloudinary.uploader.upload(image)
+            imgur_link = response['secure_url']
 
             connection = get_db_connection()
             cursor = connection.cursor()
